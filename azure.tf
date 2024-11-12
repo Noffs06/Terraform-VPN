@@ -103,11 +103,11 @@ resource "azurerm_route_table" "Rota_AWS" {
   route {
     name           = "route1"
     address_prefix = "192.168.1.0/24"
-    next_hop_type  = azurerm_virtual_network_gateway.vpn_gateway.id
+    next_hop_type  = "VirtualNetworkGateway"
   }
 }
 
-resource "azurerm_route_table_association" "Associacao_tabela" {
+resource "azurerm_subnet_route_table_association" "Associacao_tabela" {
   subnet_id      = azurerm_subnet.public1.id
   route_table_id = azurerm_route_table.Rota_AWS.id
 }
