@@ -55,45 +55,40 @@ resource "azurerm_virtual_network_gateway" "vpn_gateway" {
   }
 }
 
-# resource "azurerm_network_security_group" "sg" {
-#   name                = "GrupoLinux"
-#   location            = azurerm_resource_group.grupo.location
-#   resource_group_name = azurerm_resource_group.grupo.name
+resource "azurerm_network_security_group" "sg" {
+  name                = "GrupoLinux"
+  location            = azurerm_resource_group.grupo.location
+  resource_group_name = azurerm_resource_group.grupo.name
 
-#   security_rule {
-#     name                       = "SSH"
-#     priority                   = 1001
-#     direction                  = "Inbound"
-#     access                     = "Allow"
-#     protocol                   = "Tcp"
-#     source_port_range          = "*"
-#     destination_port_range     = "22"
-#     source_address_prefix      = "*"
-#     destination_address_prefix = "*"
-#   }
-#   security_rule {
-#     name                       = "HTTP"
-#     priority                   = 1002
-#     direction                  = "Inbound"
-#     access                     = "Allow"
-#     protocol                   = "Tcp"
-#     source_port_range          = "*"
-#     destination_port_range     = "80"
-#     source_address_prefix      = "*"
-#     destination_address_prefix = "*"
-#   }
-# }
+  security_rule {
+    name                       = "SSH"
+    priority                   = 1001
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  security_rule {
+    name                       = "HTTP"
+    priority                   = 1002
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
 
-# resource "azurerm_subnet_network_security_group_association" "public1_nsg_association" {
-#   subnet_id                 = azurerm_subnet.public1.id
-#   network_security_group_id = azurerm_network_security_group.sg.id
+resource "azurerm_subnet_network_security_group_association" "public1_nsg_association" {
+  subnet_id                 = azurerm_subnet.public1.id
+  network_security_group_id = azurerm_network_security_group.sg.id
 
-# }
-# resource "azurerm_subnet_network_security_group_association" "public2_nsg_association" {
-#   subnet_id                 = azurerm_subnet.public2.id
-#   network_security_group_id = azurerm_network_security_group.sg.id
-
-# }
+}
 
 resource "azurerm_route_table" "Rota_AWS" {
   name                = "tabela_vpn"
@@ -110,4 +105,49 @@ resource "azurerm_route_table" "Rota_AWS" {
 resource "azurerm_subnet_route_table_association" "Associacao_tabela" {
   subnet_id      = azurerm_subnet.public1.id
   route_table_id = azurerm_route_table.Rota_AWS.id
+}
+
+resource "azurerm_local_network_gateway" "GTW-LOCAL01" {
+  name                = "GTW-LOCAL01"
+  location            = azurerm_resource_group.grupo.location
+  resource_group_name = azurerm_resource_group.grupo.name
+
+  gateway_address = aws_vpn_connection.vpn_connection.tunnel1_address
+  address_space = [
+    aws_subnet.vpn_subnet.cidr_block
+  ]
+}
+
+resource "azurerm_local_network_gateway" "GTW-LOCAL02" {
+  name                = "GTW-LOCAL02"
+  location            = azurerm_resource_group.grupo.location
+  resource_group_name = azurerm_resource_group.grupo.name
+
+  gateway_address = aws_vpn_connection.vpn_connection.tunnel2_address
+  address_space = [
+    aws_subnet.vpn_subnet.cidr_block
+  ]
+}
+
+resource "azurerm_virtual_network_gateway_connection" "CONEXAO-01" {
+  name                       = "CONEXAO-01"
+  location                   = azurerm_resource_group.grupo.location
+  resource_group_name        = azurerm_resource_group.grupo.name
+  type                       = "IPsec"
+  virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn_gateway.id
+  local_network_gateway_id   = azurerm_local_network_gateway.GTW-LOCAL01.id
+  # AWS VPN Connection secret shared key
+  shared_key = aws_vpn_connection.vpn_connection.tunnel1_preshared_key
+}
+
+
+resource "azurerm_virtual_network_gateway_connection" "CONEXAO-02" {
+  name                       = "CONEXAO-02"
+  location                   = azurerm_resource_group.grupo.location
+  resource_group_name        = azurerm_resource_group.grupo.name
+  type                       = "IPsec"
+  virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn_gateway.id
+  local_network_gateway_id   = azurerm_local_network_gateway.GTW-LOCAL02.id
+  # AWS VPN Connection secret shared key
+  shared_key = aws_vpn_connection.vpn_connection.tunnel2_preshared_key
 }
