@@ -42,6 +42,7 @@ resource "aws_route_table_association" "vpn_route_table_association" {
   route_table_id = aws_route_table.vpn_route_table.id
 }
 
+<<<<<<< HEAD
 
 resource "aws_security_group" "allow_icmp" {
   name        = "allow-icmp"
@@ -130,3 +131,5 @@ resource "aws_instance" "zabbix_server" {
   sudo gluster volume start gv0
   EOF
 }
+=======
+>>>>>>> d5b83f594376b3c6d97c07da65995aabbb2a1abd
