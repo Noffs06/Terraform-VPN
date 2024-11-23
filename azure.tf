@@ -82,7 +82,6 @@ resource "azurerm_network_security_group" "sg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-<<<<<<< HEAD
   
   security_rule {
     name                       = "ICMP"
@@ -101,15 +100,6 @@ resource "azurerm_network_security_group" "sg" {
 resource "azurerm_subnet_network_security_group_association" "public1_nsg_association" {
   subnet_id                 = azurerm_subnet.public1.id
   network_security_group_id = azurerm_network_security_group.sg.id
-
-=======
-}
-
-resource "azurerm_subnet_network_security_group_association" "public1_nsg_association" {
-  subnet_id                 = azurerm_subnet.public1.id
-  network_security_group_id = azurerm_network_security_group.sg.id
-
->>>>>>> d5b83f594376b3c6d97c07da65995aabbb2a1abd
 }
 
 resource "azurerm_route_table" "Rota_AWS" {
@@ -172,9 +162,7 @@ resource "azurerm_virtual_network_gateway_connection" "CONEXAO-02" {
   local_network_gateway_id   = azurerm_local_network_gateway.GTW-LOCAL02.id
   # AWS VPN Connection secret shared key
   shared_key = aws_vpn_connection.vpn_connection.tunnel2_preshared_key
-<<<<<<< HEAD
 }
-
 
 resource "azurerm_network_interface" "zabbix_server" {
   name                = "example-nic"
@@ -189,10 +177,14 @@ resource "azurerm_network_interface" "zabbix_server" {
 }
 # O provisionador fica aqui dentro, o que significa que ele só vai rodar após a VM ser criada
 resource "azurerm_linux_virtual_machine" "zabbix_server" {
-  name                  = "ZabbixServer"
+  name                  = "ZabbixServer-Azure"
   resource_group_name   = azurerm_resource_group.grupo.name
   location              = azurerm_resource_group.grupo.location
-  size                  = "Standard_B2ms" # Tamanho adequado para Zabbix
+  size                  = "Standard_B2ms"
+  admin_ssh_key {
+    username = "root"
+    public_key = file("")
+  }
   admin_username        = "azureuser"
   admin_password        = "P@ssw0rd1234!"
   network_interface_ids = [azurerm_network_interface.zabbix_server.id]
@@ -210,26 +202,3 @@ resource "azurerm_linux_virtual_machine" "zabbix_server" {
     version   = "latest"
   }
 }
-
-
-resource "azurerm_linux_virtual_machine_extension" "duahsduihwui" {
-  name                      = "customScript"
-  virtual_machine_id        = azurerm_linux_virtual_machine.zabbix_server.id
-  publisher                  = "Microsoft.Azure.Extensions"
-  type                       = "CustomScript"
-  type_handler_version      = "2.1"
-  settings = <<-SETTINGS
-    {
-      "scriptFile": "./script_Azure.sh"
-    }
-  SETTINGS
-
-  depends_on = [
-    azurerm_linux_virtual_machine.zabbix_server
-  ]
-}
-
-
-=======
-}
->>>>>>> d5b83f594376b3c6d97c07da65995aabbb2a1abd

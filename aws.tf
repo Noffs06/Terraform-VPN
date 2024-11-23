@@ -42,8 +42,6 @@ resource "aws_route_table_association" "vpn_route_table_association" {
   route_table_id = aws_route_table.vpn_route_table.id
 }
 
-<<<<<<< HEAD
-
 resource "aws_security_group" "allow_icmp" {
   name        = "allow-icmp"
   description = "Allow ICMP traffic from Azure VPC"
@@ -64,72 +62,23 @@ resource "aws_security_group" "allow_icmp" {
   }
 }
 
-#MAQUINA VIRTUAL UBUNTU COM BOTSTRAPPING COM SERVIDOR ZABIX
 
-variable "azure_vm_private_ip" {
-  description = "O IP privado da VM Azure"
-  type        = string
+
+#MAQUINA VIRTUAL UBUNTU COM BOTSTRAPPING COM SERVIDOR ZABIX
+output "aws_zabbix_private_ip" {
+  value = aws_instance.zabbix_server.private_ip
 }
 
+
 resource "aws_instance" "zabbix_server" {
-  ami           = "ami-0866a3c8686eaeeba" # Substitua por uma AMI compatível com Ubuntu ou outra de sua preferência
+  ami           = "ami-0866a3c8686eaeeba"  # Substitua pela sua AMI
   instance_type = "t2.medium"
   subnet_id     = aws_subnet.vpn_subnet.id
-  security_groups = [aws_security_group.allow_icmp.id] # Reutilizando o Security Group existente para permitir ICMP
+  security_groups = [aws_security_group.allow_icmp.id]
+  
 
   tags = {
     Name = "Zabbix-Server-AWS"
   }
-
-  user_data = <<-EOF
-  #!/bin/bash
-  sudo su -
-
-  # Instalar o Zabbix
-  wget https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu22.04_all.deb
-  dpkg -i zabbix-release_6.4-1+ubuntu22.04_all.deb
-
-  # Atualizar o sources list e baixar as dependências necessárias
-  apt update -y
-  apt install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent mysql-server -y
-
-  # Configuração do banco de dados
-  mysql -u root --password="" -e "create database zabbix character set utf8mb4 collate utf8mb4_bin;"
-  mysql -u root --password="" -e "create user zabbix@localhost identified by 'Senai@134';"
-  mysql -u root --password="" -e "grant all privileges on zabbix.* to zabbix@localhost;"
-  mysql -u root --password="" -e "set global log_bin_trust_function_creators = 1;"
-
-  zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix --password="Senai@134" zabbix
-
-  mysql -u root --password="" -e "set global log_bin_trust_function_creators = 0;"
-
-  # Substituir a senha no arquivo de configuração
-  sed -i '129s/# DBPassword=/DBPassword=Senai@134/' /etc/zabbix/zabbix_server.conf
-
-  # Reiniciar os serviços
-  systemctl restart zabbix-server.service zabbix-agent.service apache2.service
-  systemctl enable zabbix-server.service zabbix-agent.service apache2.service
-
-  # Instalar GlusterFS
-  sudo apt-get update -y
-  sudo apt-get install -y glusterfs-server
-
-  # Iniciar o serviço GlusterFS
-  sudo systemctl start glusterfs
-  sudo systemctl enable glusterfs
-
-  # Exibir status do serviço GlusterFS
-  sudo systemctl status glusterfs
-
-  # Adicionar o peer da instância da Azure
-  sudo gluster peer probe ${aws_instance.zabbix_server.private_ip}
-
-  # Criar o volume GlusterFS
-  sudo gluster volume create gv0 replica 2 ${aws_instance.zabbix_server.network_interface[0].private_ip}:/data ${azurerm_network_interface.zabbix_server.private_ip}:/data
-
-  # Iniciar o volume GlusterFS
-  sudo gluster volume start gv0
-  EOF
 }
-=======
->>>>>>> d5b83f594376b3c6d97c07da65995aabbb2a1abd
+
