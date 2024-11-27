@@ -175,30 +175,3 @@ resource "azurerm_network_interface" "zabbix_server" {
     private_ip_address_allocation = "Dynamic"
   }
 }
-# O provisionador fica aqui dentro, o que significa que ele só vai rodar após a VM ser criada
-resource "azurerm_linux_virtual_machine" "zabbix_server" {
-  name                  = "ZabbixServer-Azure"
-  resource_group_name   = azurerm_resource_group.grupo.name
-  location              = azurerm_resource_group.grupo.location
-  size                  = "Standard_B2ms"
-  admin_ssh_key {
-    username = "root"
-    public_key = file("")
-  }
-  admin_username        = "azureuser"
-  admin_password        = "P@ssw0rd1234!"
-  network_interface_ids = [azurerm_network_interface.zabbix_server.id]
-
-  os_disk {
-    name              = "zabbix-os-disk"
-    caching           = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "22.04-LTS"
-    version   = "latest"
-  }
-}

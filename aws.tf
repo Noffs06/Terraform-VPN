@@ -18,6 +18,14 @@ resource "aws_customer_gateway" "cg" {
   type       = "ipsec.1"
 }
 
+resource "aws_internet_gateway" "IGW-VPN" {
+  vpc_id = aws_vpc.vpn_vpc.id
+
+  tags = {
+    Name = "IGW-VPN"
+  }
+}
+
 resource "aws_vpn_connection" "vpn_connection" {
   vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
   customer_gateway_id = aws_customer_gateway.cg.id
@@ -35,12 +43,24 @@ resource "aws_route_table" "vpn_route_table" {
     cidr_block = "172.16.1.0/24"
     gateway_id = aws_vpn_gateway.vpn_gateway.id
   }
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.IGW-VPN.id
+  } 
 }
 
 resource "aws_route_table_association" "vpn_route_table_association" {
   subnet_id      = aws_subnet.vpn_subnet.id
   route_table_id = aws_route_table.vpn_route_table.id
 }
+
+resource "aws_vpn_gateway_route_propagation" "vpn_propagation" {
+  depends_on     = [aws_vpn_gateway.vpn_gateway, aws_route_table.vpn_route_table]
+  vpn_gateway_id = aws_vpn_gateway.vpn_gateway.id
+  route_table_id = aws_route_table.vpn_route_table.id
+}
+
 
 resource "aws_security_group" "allow_icmp" {
   name        = "allow-icmp"
